@@ -1,0 +1,186 @@
+
+org 100h
+mov dx,offset char          ;code to print opening message
+mov cx,0h
+mov ah,09h
+int 21h
+
+sub ax,ax                   ;clear registers
+sub dx,dx
+
+mov ah,0ah                  ;take input
+mov dx,offset buffer
+int 21h
+
+mov si,offset buffer        ;point si to buffer array
+add si,2h
+
+sub ax,ax                   ;convert taken input, ascii to hexa value
+mov al,[si]
+sub al,30h
+mov bl,100d
+mul bl
+mov cl,al
+mov al,[si+1]
+sub al,30h
+mov bl,10d
+mul bl
+add cx,ax
+mov al,[si+2]
+sub ax,30h
+add cx,ax
+
+
+
+cmp cx,78h                 ;if input is greater than 120 terminate program otherwise continue
+jg b
+cmp cx,78h
+jng c
+
+b:                         
+    sub ax,ax              ;if it is greater than 120 display a message
+    sub dx,dx
+    mov dx,offset greater
+    mov ah,09h
+    int 21h
+    ret
+c:
+
+
+mov ax,cx                  ;perform r^2 - x^2
+mul cx
+mov dx,3840h
+sub dx,ax                  ;dx holds y^2
+
+
+
+mov cx,00000h              ;perform square root operation
+mov bx,0ffffh              ;add 2 to cx and substract bx from dx(y^2)
+sq:                        ;until bx exceeds its value
+add bx,02h                 ;cx will hold approximate value of square root of y^2
+inc cx
+sub dx,bx
+cmp dx,bx
+jge sq
+
+mov ax,cx                  ;adjustments 
+mov si,0h
+sub dx,dx                  
+
+
+
+mov bx,100d                ;convert answer to the ascii representation
+mov di,0h
+div bx                     ;divide by 100 and 10 consecutevily to split 
+mov [si],ax                ;them into to its digits then add 30h
+add [si],30h
+
+mov ax,dx
+mov bx,10d
+div bl
+mov [si+1],al
+add [si+1],30h
+mov al,ah
+mov [si+2],ah
+add [si+2],30h
+
+
+mov di,offset final        ;point di to the final messages address 
+mov cx,3                   ;set cx to the 3 because it has 3 digits
+
+p:                         ;place elemnts of [si] to [di] then si+1
+    mov al,[si]            ;si+2 to di+2 and di+3 
+    mov [di],al
+    inc si
+    inc di
+    dec cx
+    jnz p
+    
+ 
+mov dx,offset final_message;display final message
+mov ah,09h
+int 21h
+
+sub dx,dx                  ;clear registers 
+sub ax,ax
+
+                           
+mov ax,offset final        
+
+mov dx,ax                  ;display value of result
+mov ah,09h
+int 21h
+
+                           ;set si to 0 
+mov si,0h
+
+                           
+bas:                       ;in this loop calculate the value of y with
+    mov ax,si              ;corresponding x values starting from 0
+    mov cx,si              ;square root operation has the same algorithm 
+    mov ax,cx              ;as we used before
+    mul cx
+    mov dx,14400d
+    sub dx,ax
+    
+    mov cx,00000h
+    mov bx,0ffffh
+    sq_2:
+        add bx,02h
+        inc cx
+        sub dx,bx
+        cmp dx,bx
+        jge sq_2
+        
+    
+    mov 01000h[si],cx
+    
+    inc si
+    
+    
+    cmp si,121d
+    jne bas
+    
+
+mov dx,offset f           ;display a final message that program has ended
+mov ah,09h
+int 21h
+
+
+mov ah,4ch                  ;terminate the program
+int 21h
+
+
+
+
+
+
+
+
+
+
+ret
+
+
+
+char            db "This code is for Midterm 2 pre-work of ELE336 Course.Enter an integer between 0 and 120 in form of xxx as X-pixel value",0ah,0dh,"$" 
+
+buffer          db 3 db 3 dup "?",'$'
+
+
+
+greater         db 0ah,0dh,"  Entered integer is not between 0 and 120",'$'
+
+
+final_message   db 0ah,0dh,"Y-pixel value is = ",'$'
+
+final           db 3 db dup 3 "?","$"
+
+ff              db dup 3 "?","$"
+
+f               db 0ah,0dh,"The program has enden corresponding Y values are at memory starting from 0800:0000","$"
+
+
+
+
+
